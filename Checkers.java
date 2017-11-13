@@ -15,7 +15,7 @@ import java.util.*;
  * of type Checkers as its content pane.
  */
 
-//Last Edited by Ivanov N. on 01.11.2017
+//Last Edited by Ivanov N. on 10.2017
     public class Checkers extends JPanel 
     {
 	private static final long serialVersionUID = 1L;
@@ -366,38 +366,38 @@ import java.util.*;
       //Draw a checkerboard pattern in gray and lightGray.
       public void paint(Graphics g) {
          //Border
-         g.setColor(Color.white);
-         g.drawRect(0,0,getSize().width-1,getSize().height-1);
-         g.drawRect(1,1,getSize().width-3,getSize().height-3); 
+    	  g.setColor(Color.black);
+          g.drawRect(0,0,getSize().width-1,getSize().height-1);
+          g.drawRect(1,1,getSize().width-3,getSize().height-3); 
          //Checkers and squares
-         for (int row = 0; row < 8; row++) {
-            for (int col = 0; col < 8; col++) {
-               if ( row % 2 == col % 2 )
-                  g.setColor(Color.LIGHT_GRAY);
-               else
-                  g.setColor(Color.GRAY);
-               g.fillRect(2 + col*20, 2 + row*20, 20, 0);
-               switch (board.piece(row,col)) {
-               case Data.RED:
-                  g.setColor(Color.RED);
-                  g.fillOval(4 + col*20, 4 + row*20, 15, 15);
-                  break;
-               case Data.BLACK:
-                  g.setColor(Color.BLACK);
-                  g.fillOval(4 + col*20, 4 + row*20, 15, 15);
-                  break;
-               case Data.RED_KING:
-                  g.setColor(Color.RED);
-                  g.fillOval(4 + col*20, 4 + row*20, 15, 15);
-                  g.setColor(Color.WHITE);
-                  g.drawString("K", 7 + col*20, 16 + row*20);
-                  break;
-               case Data.BLACK_KING:
-                  g.setColor(Color.BLACK);
-                  g.fillOval(4 + col*20, 4 + row*20, 15, 15);
-                  g.setColor(Color.WHITE);
-                  g.drawString("K", 7 + col*20, 16 + row*20);
-                  break;
+          for (int row = 0; row < 8; row++) {
+              for (int col = 0; col < 8; col++) {
+                 if ( row % 2 == col % 2 )
+                    g.setColor(Color.LIGHT_GRAY);
+                 else
+                     g.setColor(Color.GRAY);
+                  g.fillRect(2 + col*20, 2 + row*20, 20, 20);
+                  switch (board.piece(row,col)) {
+                  case Data.RED:
+                     g.setColor(Color.RED);
+                     g.fillOval(4 + col*20, 4 + row*20, 15, 15);
+                     break;
+                  case Data.BLACK:
+                     g.setColor(Color.BLACK);
+                     g.fillOval(4 + col*20, 4 + row*20, 15, 15);
+                     break;
+                  case Data.RED_KING:
+                     g.setColor(Color.RED);
+                     g.fillOval(4 + col*20, 4 + row*20, 15, 15);
+                     g.setColor(Color.WHITE);
+                     g.drawString("K", 7 + col*20, 16 + row*20);
+                     break;
+                  case Data.BLACK_KING:
+                     g.setColor(Color.BLACK);
+                     g.fillOval(4 + col*20, 4 + row*20, 15, 15);
+                     g.setColor(Color.WHITE);
+                     g.drawString("K", 7 + col*20, 16 + row*20);
+                     break;
                }
             }
          }   
