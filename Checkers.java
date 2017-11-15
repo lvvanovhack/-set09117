@@ -1,6 +1,8 @@
 import java.awt.*;
 import java.awt.event.*;
+
 import javax.swing.*;
+
 import java.util.*;
 
 
@@ -48,6 +50,9 @@ import java.util.*;
    
 	private static Stack<Movement> redoStack;
 	private static Stack<Movement> undoStack;
+	private static Stack<Movement> legals;
+	private static Stack<Movement> kingLegals;
+	
    /**
     * The constructor creates the Board (which in turn creates and manages
     * the buttons and message label), adds all the components, and sets
@@ -117,7 +122,7 @@ import java.util.*;
     private boolean gameRun; // Is a game currently in progress?
 	Data board;  
 	//Array with the moves that are legal to be made.
-    Movement[] legalMoves;
+   // Stack<Movement> legals;
       /**
        * The next three variables are valid only when the game is in progress.
        * Assuming the turn and if player = RED or BLACK
@@ -165,23 +170,23 @@ import java.util.*;
          else if( src == undoButton && undoStack.empty() == false)
          {
         	Movement lastUndo = undoStack.peek();
-        	System.out.println("undo stack bef pop " + undoStack);
-        	System.out.println("redo stack bef push" + redoStack);
+   //     	System.out.println("undo stack bef pop " + undoStack);
+   //     	System.out.println("redo stack bef push" + redoStack);
         	redoStack.push(lastUndo);
         	undoStack.pop();
-        	System.out.println("undo stack after pop " + undoStack);
-        	System.out.println("redo stack after push" + redoStack);       	
+   //     	System.out.println("undo stack after pop " + undoStack);
+  //      	System.out.println("redo stack after push" + redoStack);       	
         	makeMove(lastUndo);
          }
          else if( src == redoButton)
          {
         	 Movement lastRedo = redoStack.peek(); 
-        	 System.out.println("r st:" + redoStack);
-        	 System.out.println("u st:" + undoStack);
+    //    	 System.out.println("r st:" + redoStack);
+     //   	 System.out.println("u st:" + undoStack);
         	 undoStack.push(lastRedo);
         	 redoStack.pop();
-        	 System.out.println("r stack:" + redoStack);
-        	 System.out.println("u stack:" + undoStack);    	 
+     //   	 System.out.println("r stack:" + redoStack);
+    //    	 System.out.println("u stack:" + undoStack);    	 
         	 makeMove(lastRedo);
          }
       }
@@ -194,10 +199,11 @@ import java.util.*;
             return;
          }
          board.prepareGame();   // Set up the pieces.
-         currPlayer = Data.RED;   // RED always makes the first move       
-         legalMoves = board.getLegalMoves(Data.RED);  // Get RED's legal moves.    
+         currPlayer = Data.WHITE;   // RED always makes the first move       
+         legals = board.getLegalMoves(Data.WHITE);  // Get WHITE's legal moves. 
+     //    legals = board.getLegalMoves(Data.WHITE);
          selectedRow = -1;   // By default at start of each game.
-         userMsg.setText("Red:  Make your move.");
+         userMsg.setText("WHITE:  Make your move.");
          gameRun = true;
          newGameButton.setEnabled(false);
          resignButton.setEnabled(true);
@@ -212,7 +218,7 @@ import java.util.*;
             userMsg.setText("There is no game in progress!");
             return;
          }
-         if (currPlayer == Data.RED)
+         if (currPlayer == Data.WHITE)
             gameOver("RED resigns.  BLACK wins.");
          else
             gameOver("BLACK resigns.  RED wins.");
@@ -237,12 +243,12 @@ import java.util.*;
       void clickMove(int row, int col) {
     	//CHANGES To be made here
     	 
-         for (int i = 0; i < legalMoves.length; i++)
-            if (legalMoves[i].fromRow == row && legalMoves[i].fromCol == col) {
+         for (int i = 0; i < legals.size(); i++)
+            if (legals.get(i).fromRow == row && legals.get(i).fromCol == col) {
                selectedRow = row;
                selectedCol = col;
                
-               if (currPlayer == Data.RED)
+               if (currPlayer == Data.WHITE)
                {
                userMsg.setText("RED:  Make your move.");
                msgmoves.setText("RED " + " " + selectedRow + " " + selectedCol);
@@ -264,11 +270,11 @@ import java.util.*;
          }
          /* If the user clicked on a square where the selected piece can be
           legally moved, move and return. */ 
-         for (int i = 0; i < legalMoves.length; i++)
-            if (legalMoves[i].fromRow == selectedRow && legalMoves[i].fromCol == selectedCol
-                  && legalMoves[i].toRow == row && legalMoves[i].toCol == col) 
+         for (int i = 0; i < legals.size(); i++)
+            if (legals.get(i).fromRow == selectedRow && legals.get(i).fromCol == selectedCol
+                  && legals.get(i).toRow == row && legals.get(i).toCol == col) 
             {
-               makeMove(legalMoves[i]);
+               makeMove(legals.get(i));
                return;
             }
          /* If we get to this point, there is a piece selected, and the square where
@@ -298,9 +304,9 @@ import java.util.*;
           */
          if (move.jumping()) 
          {
-            legalMoves = board.getLegalJumpsFrom(currPlayer,move.toRow,move.toCol);
-            if (legalMoves != null) {
-               if (currPlayer == Data.RED)
+            legals = board.getLegalJumpsFrom(currPlayer,move.toRow,move.toCol);
+            if (legals != null) {
+               if (currPlayer == Data.WHITE)
                   userMsg.setText("RED:  You must continue jumping.");
                else
                   userMsg.setText("BLACK:  You must continue jumping.");
@@ -315,24 +321,24 @@ import java.util.*;
           Get that player's legal moves.  If the player has no legal moves,
           then the game ends. */
          
-         if (currPlayer == Data.RED) 
+         if (currPlayer == Data.WHITE) 
          {
             currPlayer = Data.BLACK;
-            legalMoves = board.getLegalMoves(currPlayer);
-            if (legalMoves == null)
+            legals = board.getLegalMoves(currPlayer);
+            if (legals == null)
                gameOver("BLACK has no moves.  RED wins.");
-            else if (legalMoves[0].jumping())
+            else if (legals.peek().jumping())
                userMsg.setText("BLACK:  Make your move.  You must jump.");
             else
                userMsg.setText("BLACK:  Make your move.");
          }
          else 
          {
-            currPlayer = Data.RED;
-            legalMoves = board.getLegalMoves(currPlayer);
-            if (legalMoves == null)
+            currPlayer = Data.WHITE;
+            legals = board.getLegalMoves(currPlayer);
+            if (legals == null)
                gameOver("RED has no moves.  BLACK wins.");
-            else if (legalMoves[0].jumping())
+            else if (legals.peek().jumping())
                userMsg.setText("RED:  Make your move.  You must jump.");
             else
                userMsg.setText("RED:  Make your move.");
@@ -346,17 +352,17 @@ import java.util.*;
           *  As a courtesy to the user, if all legal moves use the same piece, then 
           *  select that piece automatically so the user won't have to click on it
           */
-         if (legalMoves != null) {
+         if (legals != null) {
             boolean sameStartSquare = true;
-            for (int i = 1; i < legalMoves.length; i++)
-               if (legalMoves[i].fromRow != legalMoves[0].fromRow
-                     || legalMoves[i].fromCol != legalMoves[0].fromCol) {
+            for (int i = 1; i < legals.size(); i++)
+               if (legals.get(i).fromRow != legals.peek().fromRow
+                     || legals.get(i).fromCol != legals.peek().fromCol) {
                   sameStartSquare = false;
                   break;
                }
             if (sameStartSquare) {
-               selectedRow = legalMoves[0].fromRow;
-               selectedCol = legalMoves[0].fromCol;
+               selectedRow = legals.peek().fromRow;
+               selectedCol = legals.peek().fromCol;
             }
          }
          // Make sure the board is redrawn in its new state. 
@@ -378,16 +384,16 @@ import java.util.*;
                      g.setColor(Color.GRAY);
                   g.fillRect(2 + col*20, 2 + row*20, 20, 20);
                   switch (board.piece(row,col)) {
-                  case Data.RED:
-                     g.setColor(Color.RED);
+                  case Data.WHITE:
+                     g.setColor(Color.WHITE);
                      g.fillOval(4 + col*20, 4 + row*20, 15, 15);
                      break;
                   case Data.BLACK:
                      g.setColor(Color.BLACK);
                      g.fillOval(4 + col*20, 4 + row*20, 15, 15);
                      break;
-                  case Data.RED_KING:
-                     g.setColor(Color.RED);
+                  case Data.WHITE_KING:
+                     g.setColor(Color.WHITE);
                      g.fillOval(4 + col*20, 4 + row*20, 15, 15);
                      g.setColor(Color.WHITE);
                      g.drawString("K", 7 + col*20, 16 + row*20);
@@ -405,9 +411,9 @@ import java.util.*;
          if (gameRun) 
          {
             g.setColor(Color.green);
-            for (int i = 0; i < legalMoves.length; i++) {
-               g.drawRect(2 + legalMoves[i].fromCol*20, 2 + legalMoves[i].fromRow*20, 19, 19);
-               g.drawRect(3 + legalMoves[i].fromCol*20, 3 + legalMoves[i].fromRow*20, 17, 17);
+            for (int i = 0; i < legals.size(); i++) {
+               g.drawRect(2 + legals.get(i).fromCol*20, 2 + legals.get(i).fromRow*20, 19, 19);
+               g.drawRect(3 + legals.get(i).fromCol*20, 3 + legals.get(i).fromRow*20, 17, 17);
             }
                /* If a piece is selected for moving (i.e. if selectedRow >= 0), then
                 draw a 2-pixel white border around that piece and draw green borders 
@@ -417,10 +423,10 @@ import java.util.*;
                g.drawRect(2 + selectedCol*20, 2 + selectedRow*20, 19, 19);
                g.drawRect(3 + selectedCol*20, 3 + selectedRow*20, 17, 17);
                g.setColor(Color.green);
-               for (int i = 0; i < legalMoves.length; i++) {
-                  if (legalMoves[i].fromCol == selectedCol && legalMoves[i].fromRow == selectedRow) {
-                     g.drawRect(2 + legalMoves[i].toCol*20, 2 + legalMoves[i].toRow*20, 19, 19);
-                     g.drawRect(3 + legalMoves[i].toCol*20, 3 + legalMoves[i].toRow*20, 17, 17);
+               for (int i = 0; i < legals.size(); i++) {
+                  if (legals.get(i).fromCol == selectedCol && legals.get(i).fromRow == selectedRow) {
+                     g.drawRect(2 + legals.get(i).toCol*20, 2 + legals.get(i).toRow*20, 19, 19);
+                     g.drawRect(3 + legals.get(i).toCol*20, 3 + legals.get(i).toRow*20, 17, 17);
                   }
                }
             }
@@ -459,8 +465,8 @@ import java.util.*;
 
       static final int
                 EMPTY = 0,
-                RED = 1,
-                RED_KING = 2,
+                WHITE = 1,
+                WHITE_KING = 2,
                 BLACK = 3,
                 BLACK_KING = 4;
       
@@ -490,7 +496,7 @@ import java.util.*;
                   if (row < 3)
                      board[row][col] = BLACK;
                   else if (row > 4)
-                     board[row][col] = RED;
+                     board[row][col] = WHITE;
                   else
                      board[row][col] = EMPTY;
                }
@@ -528,22 +534,23 @@ import java.util.*;
             int jumpCol = (fromCol + toCol) / 2;  // Column of the jumped piece.
             board[jumpRow][jumpCol] = EMPTY;
          }
-         if (toRow == 0 && board[toRow][toCol] == RED)
-            board[toRow][toCol] = RED_KING;
+         if (toRow == 0 && board[toRow][toCol] == WHITE)
+            board[toRow][toCol] = WHITE_KING;
          if (toRow == 7 && board[toRow][toCol] == BLACK)
             board[toRow][toCol] = BLACK_KING;
       }
       /**
        * If there are any legal moves for each player
       */
-      Movement[] getLegalMoves(int player) 
+      Stack<Movement> getLegalMoves(int player) 
       {  
+    	  legals = new Stack<Movement>();
     	  undoStack = new Stack<Movement>();  //Storing moves in a stack that could be later undone.
-         if (player != RED && player != BLACK)
+         if (player != WHITE && player != BLACK)
             return null;
          int playerKing;  
-         if (player == RED)
-            playerKing = RED_KING;
+         if (player == WHITE)
+            playerKing = WHITE_KING;
          else
             playerKing = BLACK_KING;  
          /**
@@ -559,16 +566,17 @@ import java.util.*;
                if (board[row][col] == player || board[row][col] == playerKing) 
                {
                   if (canJump(player, row, col, row+1, col+1, row+2, col+2))
-                     undoStack.push(new Movement(row, col, row+2, col+2));
+                     legals.push(new Movement(row, col, row+2, col+2));
                   if (canJump(player, row, col, row-1, col+1, row-2, col+2))
-                     undoStack.push(new Movement(row, col, row-2, col+2));
+                     legals.push(new Movement(row, col, row-2, col+2));
                   if (canJump(player, row, col, row+1, col-1, row+2, col-2))
-                     undoStack.push(new Movement(row, col, row+2, col-2));
+                     legals.push(new Movement(row, col, row+2, col-2));
                   if (canJump(player, row, col, row-1, col-1, row-2, col-2))
-                     undoStack.push(new Movement(row, col, row-2, col-2));
+                     legals.push(new Movement(row, col, row-2, col-2));
                }
-               System.out.println(" stack " + undoStack);
+               
             }
+            System.out.println(" stack legals" + legals);
          }       
          /*  If any jump moves were found, then the user must jump, so we don't 
           add any regular moves.  However, if no jumps were found, check for
@@ -576,7 +584,7 @@ import java.util.*;
           If that square contains one of the player's pieces, look at a possible
           move in each of the four directions from that square.  If there is 
           a legal move in that direction.  */
-         if (undoStack.size() == 00) 
+         if (legals.empty()) 
          {
             for (int row = 0; row < 8; row++) 
             {
@@ -585,13 +593,13 @@ import java.util.*;
                   if (board[row][col] == player || board[row][col] == playerKing)
                   {
                      if (canMove(player,row,col,row+1,col+1))
-                        undoStack.push(new Movement(row, col, row+1, col+1));
+                        legals.push(new Movement(row, col, row+1, col+1));
                      if (canMove(player,row,col,row-1,col+1))
-                        undoStack.push(new Movement(row, col, row-1, col+1));
+                        legals.push(new Movement(row, col, row-1, col+1));
                      if (canMove(player,row,col,row+1,col-1))
-                        undoStack.push(new Movement(row, col, row+1, col-1));
+                        legals.push(new Movement(row, col, row+1, col-1));
                      if (canMove(player,row,col,row-1,col-1))
-                        undoStack.push(new Movement(row, col, row-1, col-1));
+                        legals.push(new Movement(row, col, row-1, col-1));
                   }
                }
             }
@@ -599,51 +607,60 @@ import java.util.*;
          /* If no legal moves have been found, return null.  Otherwise, create
           an array just big enough to hold all the legal moves, copy the
           legal moves from the stack into the array, and return the array. */
-         if (undoStack.size() == 0)
+         if (legals.empty())
             return null;
          else 
          {
-            Movement[] moveArray = new Movement[undoStack.size()];
-            for (int i = 0; i < undoStack.size(); i++)
-               moveArray[i] = undoStack.get(i);
-            return moveArray;
+            Stack<Movement> moveStack = new Stack<Movement>();
+            for (int i = 0; i < legals.size(); i++)
+            {
+               moveStack.get(i);
+            }
+            System.out.println("Legals if can jump " + " " + moveStack);
+            return moveStack;         
          } 
+         
       }  // end 
       /**
        * Return a list of the legal jumps that the specified player can
        * make starting from the specified row and column.  If no such
        * jumps are possible, null is returned.
        */
-      Movement[] getLegalJumpsFrom(int player, int row, int col) {
-         if (player != RED && player != BLACK)
+      Stack<Movement> getLegalJumpsFrom(int player, int row, int col) 
+      {
+         if (player != WHITE && player != BLACK)
             return null;
          int playerKing;  // The constant representing a King belonging to player.
-         if (player == RED)
-            playerKing = RED_KING;
+         if (player == WHITE)
+            playerKing = WHITE_KING;
          else
             playerKing = BLACK_KING;
          // The legal jumps will be stored in this list.
-         ArrayList<Movement> moves = new ArrayList<Movement>();  
+  //       ArrayList<Movement> moves = new ArrayList<Movement>();  
+         kingLegals = new Stack<Movement>();
 
          if (board[row][col] == player || board[row][col] == playerKing) 
          {
             if (canJump(player, row, col, row+1, col+1, row+2, col+2))
-               moves.add(new Movement(row, col, row+2, col+2));   
+               kingLegals.push(new Movement(row, col, row+2, col+2));   
             if (canJump(player, row, col, row-1, col+1, row-2, col+2))
-               moves.add(new Movement(row, col, row-2, col+2));
+            	kingLegals.push(new Movement(row, col, row-2, col+2));
             if (canJump(player, row, col, row+1, col-1, row+2, col-2))
-               moves.add(new Movement(row, col, row+2, col-2));
+            	kingLegals.push(new Movement(row, col, row+2, col-2));
             if (canJump(player, row, col, row-1, col-1, row-2, col-2))
-               moves.add(new Movement(row, col, row-2, col-2));
+            	kingLegals.push(new Movement(row, col, row-2, col-2));
          }
-         if (moves.size() == 0)
+         if (kingLegals.empty())
             return null;
          else 
          {
-            Movement[] moveArray = new Movement[moves.size()];
-            for (int i = 0; i < moves.size(); i++)
-               moveArray[i] = moves.get(i);
-            return moveArray;
+            Stack<Movement> moveStack = new Stack<Movement>();
+            for (int i = 0; i < kingLegals.size(); i++)
+            {
+            	moveStack.get(i);
+            }
+            System.out.println("King Legals " + " " + moveStack.toString());
+            return moveStack;
          }
       }  // end 
       /**
@@ -661,9 +678,9 @@ import java.util.*;
          if (board[r3][c3] != EMPTY)
             return false;  
          // (r3,c3) already contains a piece.
-         if (player == RED) 
+         if (player == WHITE) 
          {
-            if (board[r1][c1] == RED && r3 > r1)
+            if (board[r1][c1] == WHITE && r3 > r1)
                return false;  
             // Regular red piece can only move up.
             if (board[r2][c2] != BLACK && board[r2][c2] != BLACK_KING)
@@ -676,7 +693,7 @@ import java.util.*;
             if (board[r1][c1] == BLACK && r3 < r1)
                return false;  
             // Regular black piece can only move downn.
-            if (board[r2][c2] != RED && board[r2][c2] != RED_KING)
+            if (board[r2][c2] != WHITE && board[r2][c2] != WHITE_KING)
                return false;  
             // There is no red piece to jump.
             return true;  
@@ -696,8 +713,8 @@ import java.util.*;
          if (board[r2][c2] != EMPTY)
             return false;  
          // (r2,c2) already contains a piece.
-         if (player == RED) {
-            if (board[r1][c1] == RED && r2 > r1)
+         if (player == WHITE) {
+            if (board[r1][c1] == WHITE && r2 > r1)
                return false; 
             // Regular red piece can only move down.
             return true; 
