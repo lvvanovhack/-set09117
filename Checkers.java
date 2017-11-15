@@ -169,21 +169,21 @@ import java.util.*;
             resign();
          else if( src == undoButton && undoStack.empty() == false)
          {
-        	Movement lastUndo = undoStack.peek();
+        	Movement lastUndo = legals.peek();
    //     	System.out.println("undo stack bef pop " + undoStack);
    //     	System.out.println("redo stack bef push" + redoStack);
         	redoStack.push(lastUndo);
-        	undoStack.pop();
+        	legals.pop();
    //     	System.out.println("undo stack after pop " + undoStack);
   //      	System.out.println("redo stack after push" + redoStack);       	
         	makeMove(lastUndo);
          }
          else if( src == redoButton)
          {
-        	 Movement lastRedo = redoStack.peek(); 
+        	 Movement lastRedo = legals.peek(); 
     //    	 System.out.println("r st:" + redoStack);
      //   	 System.out.println("u st:" + undoStack);
-        	 undoStack.push(lastRedo);
+        	 legals.push(lastRedo);
         	 redoStack.pop();
      //   	 System.out.println("r stack:" + redoStack);
     //    	 System.out.println("u stack:" + undoStack);    	 
@@ -563,6 +563,7 @@ import java.util.*;
          {
             for (int col = 0; col < 8; col++) 
             {
+            	//NOT GOING IN IF
                if (board[row][col] == player || board[row][col] == playerKing) 
                {
                   if (canJump(player, row, col, row+1, col+1, row+2, col+2))
@@ -611,10 +612,12 @@ import java.util.*;
             return null;
          else 
          {
+        	 //HERE PROBLEM
             Stack<Movement> moveStack = new Stack<Movement>();
+            
             for (int i = 0; i < legals.size(); i++)
             {
-               moveStack.get(i);
+               moveStack = legals;
             }
             System.out.println("Legals if can jump " + " " + moveStack);
             return moveStack;         
@@ -628,6 +631,7 @@ import java.util.*;
        */
       Stack<Movement> getLegalJumpsFrom(int player, int row, int col) 
       {
+    	  legals = new Stack<Movement>();
          if (player != WHITE && player != BLACK)
             return null;
          int playerKing;  // The constant representing a King belonging to player.
@@ -637,25 +641,25 @@ import java.util.*;
             playerKing = BLACK_KING;
          // The legal jumps will be stored in this list.
   //       ArrayList<Movement> moves = new ArrayList<Movement>();  
-         kingLegals = new Stack<Movement>();
+         
 
          if (board[row][col] == player || board[row][col] == playerKing) 
          {
             if (canJump(player, row, col, row+1, col+1, row+2, col+2))
-               kingLegals.push(new Movement(row, col, row+2, col+2));   
+            	legals.push(new Movement(row, col, row+2, col+2));   
             if (canJump(player, row, col, row-1, col+1, row-2, col+2))
-            	kingLegals.push(new Movement(row, col, row-2, col+2));
+            	legals.push(new Movement(row, col, row-2, col+2));
             if (canJump(player, row, col, row+1, col-1, row+2, col-2))
-            	kingLegals.push(new Movement(row, col, row+2, col-2));
+            	legals.push(new Movement(row, col, row+2, col-2));
             if (canJump(player, row, col, row-1, col-1, row-2, col-2))
-            	kingLegals.push(new Movement(row, col, row-2, col-2));
+            	legals.push(new Movement(row, col, row-2, col-2));
          }
-         if (kingLegals.empty())
+         if (legals.empty())
             return null;
          else 
          {
             Stack<Movement> moveStack = new Stack<Movement>();
-            for (int i = 0; i < kingLegals.size(); i++)
+            for (int i = 0; i < legals.size(); i++)
             {
             	moveStack.get(i);
             }
