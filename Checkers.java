@@ -16,7 +16,7 @@ import java.util.*;
  */
 
 //Last Edited by Ivanov N. on 10.2017
-    public class Checkers extends JPanel 
+    class Checkers extends JPanel 
     {
 	private static final long serialVersionUID = 1L;
     /**
@@ -40,12 +40,12 @@ import java.util.*;
 	private JButton undoButton;     // Button for undoing an action.
 	private JButton redoButton;     //Button for redoing an action.
 	private JButton newGameButton;  // Button for starting a new game.
+	private JButton aiButton;             //Button for the AI turns
 	private JButton resignButton;   // Button that a player can use to end 
                                    // the game by resigning.
 	private JLabel msgmoves;        // Label showing last move made.
-	private JLabel mademove;        // Label showing last move made.
 	private JLabel userMsg;         // Label for displaying messages to the user.
-   
+    
 	Movement m;
 	static Movement[] moveArray;
 	private static Stack<Movement> rStack;
@@ -66,20 +66,20 @@ import java.util.*;
       add(board);
       add(newGameButton);
       add(resignButton);
+      add(aiButton);
       add(undoButton);
       add(redoButton);
       add(userMsg);
-      add(msgmoves);
-      add(mademove);     
-      // Setting the actual size with setBounds() method   
-      board.setBounds(20,20,164,164); // Note:  size MUST be 164-by-164 !
+      add(msgmoves);    
+      // Setting the actual size with setBounds() method
+      board.setBounds(20,20,164,164); 
       newGameButton.setBounds(210, 20, 120, 30);
       resignButton.setBounds(210, 80, 120, 30);
+      aiButton.setBounds(50, 240, 120, 30);
       undoButton.setBounds(210,140,120,30);
       redoButton.setBounds(210,170,120,30);
       userMsg.setBounds(0, 200, 350, 30);
-      msgmoves.setBounds(0,200,100,10);
-      mademove.setBounds(100,200,150,20);
+      msgmoves.setBounds(50,130,130,130);
       
    } // end constructor 
    //Temporary nested classes, need to be fixed
@@ -145,6 +145,8 @@ import java.util.*;
          resignButton.addActionListener(this);
          newGameButton = new JButton("New Game");
          newGameButton.addActionListener(this);
+         aiButton = new JButton("Make AI Move");
+         aiButton.addActionListener(this);
          undoButton = new JButton("Undo");
          undoButton.addActionListener(this);
          redoButton = new JButton("Redo");
@@ -153,8 +155,6 @@ import java.util.*;
          userMsg.setForeground(Color.green);
          msgmoves = new JLabel("", JLabel.CENTER);
          msgmoves.setForeground(Color.magenta);
-         mademove = new JLabel("", JLabel.CENTER);
-         mademove.setForeground(Color.green);
          board = new Data();
       } 
       
@@ -169,19 +169,27 @@ import java.util.*;
          else if( src == undoButton && lStack.empty() == false)
          {
         	uStack.push(m);
-        	
-        	Movement trash = uStack.peek();
-        	rStack.push(trash);
+        	Movement mov = uStack.peek();
+        	rStack.push(mov);
         	uStack.pop();
-        	makeMove(trash);
+        	makeMove(mov);
          }
          else if( src == redoButton)
          {
         	uStack.push(m);
-         	Movement trash = rStack.peek();
-         	uStack.push(trash);
+         	Movement mov = rStack.peek();
+         	uStack.push(mov);
          	rStack.pop();
-         	makeMove(trash);
+         	makeMove(mov);
+         }
+         else if(src == aiButton)
+         {
+        	
+        	Movement aiMove = lStack.peek();
+        	uStack.push(aiMove);
+        	aiMove = uStack.peek();
+        	uStack.pop();
+        	makeMove(aiMove);
          }
       }
       //Start a new game.
@@ -189,14 +197,14 @@ import java.util.*;
       {
          if (gameRun == true) 
          {
-            userMsg.setText("Finish the current game first!");
+            userMsg.setText("You have not finished your last game!");
             return;
          }
          board.prepareGame();   // Set up the pieces.
-         currPlayer = Data.RED;   // RED always makes the first move       
-         legalMoves = board.getLegalMoves(Data.RED);  // Get RED's legal moves.    
+         currPlayer = Data.WHITE;   // WHITE always makes the first move       
+         legalMoves = board.getLegalMoves(Data.WHITE);  // get the moves   
          selectedRow = -1;   // By default at start of each game.
-         userMsg.setText("Red:  Make your move.");
+         userMsg.setText("White:  Make your move.");
          gameRun = true;
          newGameButton.setEnabled(false);
          resignButton.setEnabled(true);
@@ -211,10 +219,10 @@ import java.util.*;
             userMsg.setText("There is no game in progress!");
             return;
          }
-         if (currPlayer == Data.RED)
-            gameOver("RED resigns.  BLACK wins.");
+         if (currPlayer == Data.WHITE)
+            gameOver("WHITE resigns.  BLACK wins.");
          else
-            gameOver("BLACK resigns.  RED wins.");
+            gameOver("BLACK resigns.  WHITE wins.");
       }
       /**
        * The game ends.  The parameter, str, is displayed as a message
@@ -233,23 +241,22 @@ import java.util.*;
        * This is called by mousePressed() when a player clicks on the
        * square in the specified row and column.
        */
-      void clickMove(int row, int col) {
-    	//CHANGES To be made here
-    	 
+      void clickMove(int row, int col) 
+      { 
          for (int i = 0; i < legalMoves.length; i++)
-            if (legalMoves[i].fromRow == row && legalMoves[i].fromCol == col) {
+            if (legalMoves[i].fromRow == row && legalMoves[i].fromCol == col) 
+            {
                selectedRow = row;
                selectedCol = col;
-               
-               if (currPlayer == Data.RED)
+               if (currPlayer == Data.WHITE)
                {
-               userMsg.setText("RED:  Make your move.");
-               msgmoves.setText("RED " + " " + selectedRow + " " + selectedCol);
+               userMsg.setText("WHITE:  Make your move.");
+               msgmoves.setText("WHITE move:" + " " + selectedRow + " " + selectedCol);
                }
                else
                {
                userMsg.setText("BLACK:  Make your move.");
-               msgmoves.setText("Black " + " " + selectedRow + " " + selectedCol);  // FIX IT
+               msgmoves.setText("Black move:" + " " + selectedRow + " " + selectedCol);  
                }
                repaint();
                return;
@@ -258,7 +265,7 @@ import java.util.*;
           select a piece.  Show an error message and return. */   
          if (selectedRow < 0) 
          {
-            userMsg.setText("Click the piece you want to move.");
+            userMsg.setText("Click over a piece");
             return;
          }
          /* If the user clicked on a square where the selected piece can be
@@ -273,15 +280,8 @@ import java.util.*;
          /* If we get to this point, there is a piece selected, and the square where
           the user just clicked is not one where that piece can be legally moved.
           Show an error message. */
-  /*       for (int i = 0; i < legalMoves.length; i++)
-   	  {
-   		     madeRow = legalMoves[i].toRow;
-             madeCol = legalMoves[i].toCol;
-               // FIX IT
-   	  }
-         mademove.setText("Black " + " " + madeRow + " " + madeCol);     */
-         userMsg.setText("Click the square you want to move to.");        
-      }  // end doClickSquare()
+         userMsg.setText("Click over a piece to move");        
+      }  // end 
       
       /**
        * This is called when the current player has chosen the specified
@@ -289,7 +289,7 @@ import java.util.*;
        */
       void makeMove(Movement move) 
       {	  
-    	  m=move;
+    	 m=move;
          board.makeMove(move);      
          /* If the move was a jump, it's possible that the player has another
           jump.  Check for legal jumps starting from the square that the player
@@ -300,10 +300,10 @@ import java.util.*;
          {
             legalMoves = board.getLegalJumpsFrom(currPlayer,move.toRow,move.toCol);
             if (legalMoves != null) {
-               if (currPlayer == Data.RED)
-                  userMsg.setText("RED:  You must continue jumping.");
+               if (currPlayer == Data.WHITE)
+                  userMsg.setText("WHITE: Continue jumping.");
                else
-                  userMsg.setText("BLACK:  You must continue jumping.");
+                  userMsg.setText("BLACK: Continue jumping.");
                
                selectedRow = move.toRow; 
                selectedCol = move.toCol;
@@ -314,30 +314,27 @@ import java.util.*;
          /* The current player's turn is ended, so change to the other player.
           Get that player's legal moves.  If the player has no legal moves,
           then the game ends. */
-         
-         if (currPlayer == Data.RED) 
+         if (currPlayer == Data.WHITE) 
          {
             currPlayer = Data.BLACK;
             legalMoves = board.getLegalMoves(currPlayer);
-            System.out.println("Black var legal moves " + legalMoves);
             if (legalMoves == null)
-               gameOver("BLACK has no moves.  RED wins.");
+               gameOver("BLACK has no moves.  WHITE wins.");
             else if (legalMoves[0].jumping())
-               userMsg.setText("BLACK:  Make your move.  You must jump.");
+               userMsg.setText("BLACK:  Click on piece to jump");
             else
                userMsg.setText("BLACK:  Make your move.");
          }
          else 
          {
-            currPlayer = Data.RED;
+            currPlayer = Data.WHITE;
             legalMoves = board.getLegalMoves(currPlayer);
-            System.out.println(" RED var legal moves " + legalMoves);
             if (legalMoves == null)
-               gameOver("RED has no moves.  BLACK wins.");
+               gameOver("WHITE has no moves.  BLACK wins.");
             else if (legalMoves[0].jumping())
-               userMsg.setText("RED:  Make your move.  You must jump.");
+               userMsg.setText("WHITE: Click on piece to jump");
             else
-               userMsg.setText("RED:  Make your move.");
+               userMsg.setText("WHITE:  Make your move.");
          }      
          /**
           *  Set selectedRow = -1 to record that the player has not yet selected
@@ -363,9 +360,8 @@ import java.util.*;
          }
          // Make sure the board is redrawn in its new state. 
          repaint();   
-      }  // end
-        
-      //Draw a checkerboard pattern in gray and lightGray.
+      }  // end   
+      //Draw a checkerboard in gray and lightGray.
       public void paint(Graphics g) {
          //Border
     	  g.setColor(Color.black);
@@ -380,18 +376,18 @@ import java.util.*;
                      g.setColor(Color.GRAY);
                   g.fillRect(2 + col*20, 2 + row*20, 20, 20);
                   switch (board.piece(row,col)) {
-                  case Data.RED:
-                     g.setColor(Color.RED);
+                  case Data.WHITE:
+                     g.setColor(Color.WHITE);
                      g.fillOval(4 + col*20, 4 + row*20, 15, 15);
                      break;
                   case Data.BLACK:
                      g.setColor(Color.BLACK);
                      g.fillOval(4 + col*20, 4 + row*20, 15, 15);
                      break;
-                  case Data.RED_KING:
-                     g.setColor(Color.RED);
-                     g.fillOval(4 + col*20, 4 + row*20, 15, 15);
+                  case Data.WHITE_KING:
                      g.setColor(Color.WHITE);
+                     g.fillOval(4 + col*20, 4 + row*20, 15, 15);
+                     g.setColor(Color.BLACK);
                      g.drawString("K", 7 + col*20, 16 + row*20);
                      break;
                   case Data.BLACK_KING:
@@ -433,7 +429,8 @@ import java.util.*;
        * an error message.  Otherwise, find the row and column that the user 
        * clicked and call doClickSquare() to handle it.
        */
-      public void mousePressed(MouseEvent evt) {
+      public void mousePressed(MouseEvent evt) 
+      {
          if (gameRun == false)
             userMsg.setText("Click \"New Game\" to start over again.");
          else {
@@ -457,12 +454,11 @@ import java.util.*;
     */
    private static class Data 
    {
-      //  The following constants represent the possible contents of a square on the board. 
-
+      //  The following constants represent a square piece
       static final int
                 EMPTY = 0,
-                RED = 1,
-                RED_KING = 2,
+                WHITE = 1,
+                WHITE_KING = 2,
                 BLACK = 3,
                 BLACK_KING = 4;
       
@@ -492,7 +488,7 @@ import java.util.*;
                   if (row < 3)
                      board[row][col] = BLACK;
                   else if (row > 4)
-                     board[row][col] = RED;
+                     board[row][col] = WHITE;
                   else
                      board[row][col] = EMPTY;
                }
@@ -530,8 +526,8 @@ import java.util.*;
             int jumpCol = (fromCol + toCol) / 2;  // Column of the jumped piece.
             board[jumpRow][jumpCol] = EMPTY;
          }
-         if (toRow == 0 && board[toRow][toCol] == RED)
-            board[toRow][toCol] = RED_KING;
+         if (toRow == 0 && board[toRow][toCol] == WHITE)
+            board[toRow][toCol] = WHITE_KING;
          if (toRow == 7 && board[toRow][toCol] == BLACK)
             board[toRow][toCol] = BLACK_KING;
       }
@@ -542,12 +538,12 @@ import java.util.*;
       */
       Movement[] getLegalMoves(int player) 
       {  
-    	  lStack = new Stack<Movement>();  //Storing moves in a stack that could be later undone.
-         if (player != RED && player != BLACK)
+    	  lStack = new Stack<Movement>();  //Storing moves in a stack that is used later for redo/undo.
+         if (player != WHITE && player != BLACK)
             return null;
          int playerKing;  
-         if (player == RED)
-            playerKing = RED_KING;
+         if (player == WHITE)
+            playerKing = WHITE_KING;
          else
             playerKing = BLACK_KING;  
          /**
@@ -621,11 +617,11 @@ import java.util.*;
        * jumps are possible, null is returned.
        */
       Movement[] getLegalJumpsFrom(int player, int row, int col) {
-         if (player != RED && player != BLACK)
+         if (player != WHITE && player != BLACK)
             return null;
          int playerKing;  // The constant representing a King belonging to player.
-         if (player == RED)
-            playerKing = RED_KING;
+         if (player == WHITE)
+            playerKing = WHITE_KING;
          else
             playerKing = BLACK_KING;
          // The legal jumps will be stored in this list.
@@ -667,11 +663,11 @@ import java.util.*;
          if (board[r3][c3] != EMPTY)
             return false;  
          // (r3,c3) already contains a piece.
-         if (player == RED) 
+         if (player == WHITE) 
          {
-            if (board[r1][c1] == RED && r3 > r1)
+            if (board[r1][c1] == WHITE && r3 > r1)
                return false;  
-            // Regular red piece can only move up.
+            // Only whites can move
             if (board[r2][c2] != BLACK && board[r2][c2] != BLACK_KING)
                return false; 
             // There is no black piece to jump.
@@ -682,9 +678,9 @@ import java.util.*;
             if (board[r1][c1] == BLACK && r3 < r1)
                return false;  
             // Regular black piece can only move downn.
-            if (board[r2][c2] != RED && board[r2][c2] != RED_KING)
+            if (board[r2][c2] != WHITE && board[r2][c2] != WHITE_KING)
                return false;  
-            // There is no red piece to jump.
+            // There is no white piece to jump.
             return true;  
          }
          
@@ -702,10 +698,10 @@ import java.util.*;
          if (board[r2][c2] != EMPTY)
             return false;  
          // (r2,c2) already contains a piece.
-         if (player == RED) {
-            if (board[r1][c1] == RED && r2 > r1)
+         if (player == WHITE) {
+            if (board[r1][c1] == WHITE && r2 > r1)
                return false; 
-            // Regular red piece can only move down.
+            // Regular white piece can only move down.
             return true; 
          }
          else 
